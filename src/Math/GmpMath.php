@@ -25,7 +25,7 @@ class GmpMath implements GmpMathInterface
     {
         return gmp_cmp($first, $other) === 0;
     }
-    
+
     /**
      * {@inheritDoc}
      * @see GmpMathInterface::mod()
@@ -77,7 +77,26 @@ class GmpMath implements GmpMathInterface
      */
     public function pow(\GMP $base, int $exponent): \GMP
     {
-        return gmp_pow($base, $exponent);
+        $e = $exponent;
+
+        if ($e < 0) {
+            throw new \InvalidArgumentException('Negative exponent not supported');
+        }
+
+        $result = gmp_init(1);
+        $b = $base;
+
+        while ($e > 0) {
+            if ($e & 1) {
+                $result = gmp_mul($result, $b);
+            }
+            $e >>= 1;
+            if ($e) {
+                $b = gmp_mul($b, $b);
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -151,7 +170,7 @@ class GmpMath implements GmpMathInterface
         $hex = gmp_strval($dec, 16);
 
         if (BinaryString::length($hex) % 2 != 0) {
-            $hex = '0'.$hex;
+            $hex = '0' . $hex;
         }
 
         return $hex;
@@ -258,7 +277,7 @@ class GmpMath implements GmpMathInterface
         $hex = gmp_strval($x, 16);
 
         if (BinaryString::length($hex) % 2 != 0) {
-            $hex = '0'.$hex;
+            $hex = '0' . $hex;
         }
 
         return pack('H*', $hex);
@@ -273,7 +292,7 @@ class GmpMath implements GmpMathInterface
         $result = gmp_init(0, 10);
         $sLen = BinaryString::length($s);
 
-        for ($c = 0; $c < $sLen; $c ++) {
+        for ($c = 0; $c < $sLen; $c++) {
             $result = gmp_add(gmp_mul(256, $result), gmp_init(ord($s[$c]), 10));
         }
 
